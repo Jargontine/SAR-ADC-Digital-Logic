@@ -7,7 +7,7 @@ parameter CLK_DIV    = 8;   // change to test different speeds:
                             // 8=1MHz, 4=2MHz, 2=4MHz, 16=500kHz
 
 //DUT signals
-reg  CK_SARCLK, sar_pdnb_vdd, sar_cmp_out;
+reg  CK_SARCLK, sar_pdnb_vdd, sar_cmp_out_vdd;
 
 wire sarclk_cds_vref_vdd, sar_comp_pdnb_vdd;
 wire sar_cmp_cdsamp1_vdd, sar_cmp_cdsamp2_vdd, sar_cmp_cdsamp3_vdd;
@@ -22,7 +22,7 @@ wire [11:0] dac_pcode, dac_ncode, adc_out;
 sar_dig_logic #(.CLK_DIV(CLK_DIV)) dut (
     .CK_SARCLK              (CK_SARCLK),
     .sar_pdnb_vdd            (sar_pdnb_vdd),
-    .sar_cmp_out             (sar_cmp_out),
+    .sar_cmp_out_vdd             (sar_cmp_out_vdd),
     .sarclk_cds_vref_vdd     (sarclk_cds_vref_vdd),
     .sar_comp_pdnb_vdd       (sar_comp_pdnb_vdd),
     .sar_cmp_cdsamp1_vdd     (sar_cmp_cdsamp1_vdd),
@@ -62,10 +62,10 @@ end
 // Drive cmp_out based on test mode
 always @(*) begin
     case (test_mode)
-        2'd0: sar_cmp_out = 1'b0; // always 0 → all bits should be 1
-        2'd1: sar_cmp_out = 1'b1; // always 1 → all bits should be 0
-        2'd2: sar_cmp_out = alt_cmp; // alternating 0,1,0,1
-        default: sar_cmp_out = 1'b0;
+        2'd0: sar_cmp_out_vdd = 1'b0; // always 0 → all bits should be 1
+        2'd1: sar_cmp_out_vdd = 1'b1; // always 1 → all bits should be 0
+        2'd2: sar_cmp_out_vdd = alt_cmp; // alternating 0,1,0,1
+        default: sar_cmp_out_vdd = 1'b0;
     endcase
 end
 
@@ -174,7 +174,7 @@ end
 // Per-sample monitor
 always @(negedge sar_data_samp) begin
     $display("  [%0t ns] Sample b%0d: cmp_out=%b -> bit=%b | pcode=%b",
-             $time/1000, 11-dut.bit_idx, sar_cmp_out, ~sar_cmp_out, dac_pcode);
+             $time/1000, 11-dut.bit_idx, sar_cmp_out_vdd, ~sar_cmp_out_vdd, dac_pcode);
 end
 
 endmodule 
