@@ -3,9 +3,9 @@
 `timescale 1ns/1ps
 
 module sar_dig_logic (
-    input  wire        master_clk,
+  	input  wire        CK_SARCLK,
     input  wire        sar_pdnb_vdd,
-    input  wire        sar_cmp_out,
+    input  wire        sar_cmp_out_vdd,
 
     // Startup outputs
     output reg         sarclk_cds_vref_vdd,
@@ -28,7 +28,7 @@ module sar_dig_logic (
 );
 
 // Parameters
-parameter CLK_DIV = 8; // these can be changed for different divisions: 8=1MHz, 4=2MHz, 						16=500kHz, 2=4MHz
+parameter CLK_DIV = 8; // these can be changed for different divisions: 8=1MHz, 4=2MHz,16=500kHz, 2=4MHz
 
 localparam BCLK_PERIOD = 10;
 localparam BCLK_HALF   = 5;
@@ -50,7 +50,7 @@ localparam SMPCVM_DUR       = 10;
 reg [4:0] clk_cnt;
 reg       ref_tick;
 
-always @(posedge master_clk or negedge sar_pdnb_vdd) begin
+  always @(posedge CK_SARCLK or negedge sar_pdnb_vdd) begin
     if (!sar_pdnb_vdd) begin
         clk_cnt  <= 0;
         ref_tick <= 0;
@@ -79,7 +79,7 @@ reg [3:0]  bit_idx;
 reg [3:0]  tick;
 reg        cmp_sampled;
 
-always @(posedge master_clk or negedge sar_pdnb_vdd) begin
+  always @(posedge CK_SARCLK or negedge sar_pdnb_vdd) begin
     if (!sar_pdnb_vdd) begin
         state                    <= ST_IDLE;
         startup_cnt              <= 0;
