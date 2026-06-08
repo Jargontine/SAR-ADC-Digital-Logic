@@ -7,7 +7,7 @@ parameter CLK_DIV    = 8;   // change to test different speeds:
                             // 8=1MHz, 4=2MHz, 2=4MHz, 16=500kHz
 
 //DUT signals
-reg  CK_SARCLK, sar_pdnb_vdd, sar_cmp_out_vdd;
+reg  sar_adc_dig_clk_vdd, sar_pdnb_vdd, sar_cmp_out_vdd;
 
 wire sarclk_cds_vref_vdd, sar_comp_pdnb_vdd;
 wire sar_cmp_cdsamp1_vdd, sar_cmp_cdsamp2_vdd, sar_cmp_cdsamp3_vdd;
@@ -20,9 +20,9 @@ wire [11:0] dac_pcode, dac_ncode, adc_out;
 
 //DUT
 sar_dig_logic #(.CLK_DIV(CLK_DIV)) dut (
-    .CK_SARCLK              (CK_SARCLK),
+    .sar_adc_dig_clk_vdd     (sar_adc_dig_clk_vdd),
     .sar_pdnb_vdd            (sar_pdnb_vdd),
-    .sar_cmp_out_vdd             (sar_cmp_out_vdd),
+    .sar_cmp_out_vdd         (sar_cmp_out_vdd),
     .sarclk_cds_vref_vdd     (sarclk_cds_vref_vdd),
     .sar_comp_pdnb_vdd       (sar_comp_pdnb_vdd),
     .sar_cmp_cdsamp1_vdd     (sar_cmp_cdsamp1_vdd),
@@ -41,8 +41,8 @@ sar_dig_logic #(.CLK_DIV(CLK_DIV)) dut (
 );
 
 //Clock
-initial CK_SARCLK = 0;
-always #(CLK_PERIOD/2) CK_SARCLK = ~CK_SARCLK;
+initial sar_adc_dig_clk_vdd = 0;
+always #(CLK_PERIOD/2) sar_adc_dig_clk_vdd = ~sar_adc_dig_clk_vdd;
 
 //cmp_out pattern control
 // 0 = fixed LOW, 1 = fixed HIGH, 2 = alternating
@@ -79,7 +79,7 @@ end
 // Startup=20µs + conversion=120µs = 140µs
 // At 8MHz: 140µs = 1120 cycles. Use CLK_DIV*300 for margin at all speeds.
 task wait_conversion;
-    repeat(CLK_DIV * 300) @(posedge CK_SARCLK);
+    repeat(CLK_DIV * 300) @(posedge sar_adc_dig_clk_vdd);
 endtask
 
 task do_reset;
@@ -87,7 +87,7 @@ task do_reset;
     // Wait long enough for any in-progress data_samp pulse to complete
     // before releasing reset, so no spurious negedge fires on data_samp
     // that would corrupt alt_cmp state
-    repeat(CLK_DIV * 20) @(posedge CK_SARCLK);
+    repeat(CLK_DIV * 20) @(posedge sar_adc_dig_clk_vdd);
     sar_pdnb_vdd = 1;
     // Explicitly clear alt_cmp after reset regardless of timing
     // Root cause: when reset fires mid-conversion, sar_data_samp may be HIGH
@@ -177,4 +177,4 @@ always @(negedge sar_data_samp) begin
              $time/1000, 11-dut.bit_idx, sar_cmp_out_vdd, ~sar_cmp_out_vdd, dac_pcode);
 end
 
-endmodule 
+endmodule
