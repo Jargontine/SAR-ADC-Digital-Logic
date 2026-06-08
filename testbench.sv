@@ -4,10 +4,10 @@ module tb_sar_dig_logic;
 
 parameter CLK_PERIOD = 125; // 8 MHz
 parameter CLK_DIV    = 8;   // change to test different speeds:
-                             // 8=1MHz, 4=2MHz, 2=4MHz, 16=500kHz
+                            // 8=1MHz, 4=2MHz, 2=4MHz, 16=500kHz
 
 //DUT signals
-reg  master_clk, sar_pdnb_vdd, sar_cmp_out;
+reg  CK_SARCLK, sar_pdnb_vdd, sar_cmp_out;
 
 wire sarclk_cds_vref_vdd, sar_comp_pdnb_vdd;
 wire sar_cmp_cdsamp1_vdd, sar_cmp_cdsamp2_vdd, sar_cmp_cdsamp3_vdd;
@@ -20,7 +20,7 @@ wire [11:0] dac_pcode, dac_ncode, adc_out;
 
 //DUT
 sar_dig_logic #(.CLK_DIV(CLK_DIV)) dut (
-    .master_clk              (master_clk),
+    .CK_SARCLK              (CK_SARCLK),
     .sar_pdnb_vdd            (sar_pdnb_vdd),
     .sar_cmp_out             (sar_cmp_out),
     .sarclk_cds_vref_vdd     (sarclk_cds_vref_vdd),
@@ -41,8 +41,8 @@ sar_dig_logic #(.CLK_DIV(CLK_DIV)) dut (
 );
 
 //Clock
-initial master_clk = 0;
-always #(CLK_PERIOD/2) master_clk = ~master_clk;
+initial CK_SARCLK = 0;
+always #(CLK_PERIOD/2) CK_SARCLK = ~CK_SARCLK;
 
 //cmp_out pattern control
 // 0 = fixed LOW, 1 = fixed HIGH, 2 = alternating
@@ -79,7 +79,7 @@ end
 // Startup=20µs + conversion=120µs = 140µs
 // At 8MHz: 140µs = 1120 cycles. Use CLK_DIV*300 for margin at all speeds.
 task wait_conversion;
-    repeat(CLK_DIV * 300) @(posedge master_clk);
+    repeat(CLK_DIV * 300) @(posedge CK_SARCLK);
 endtask
 
 task do_reset;
@@ -87,7 +87,7 @@ task do_reset;
     // Wait long enough for any in-progress data_samp pulse to complete
     // before releasing reset, so no spurious negedge fires on data_samp
     // that would corrupt alt_cmp state
-    repeat(CLK_DIV * 20) @(posedge master_clk);
+    repeat(CLK_DIV * 20) @(posedge CK_SARCLK);
     sar_pdnb_vdd = 1;
     // Explicitly clear alt_cmp after reset regardless of timing
     // Root cause: when reset fires mid-conversion, sar_data_samp may be HIGH
@@ -145,7 +145,7 @@ initial begin
 
     // TEST 3: cmp_out alternating 0,1,0,1,0,1,0,1,0,1,0,1
     // Expected: bits 1,0,1,0,1,0,1,0,1,0,1,0
-    //           adc_out = 101010101010 = 0xAAA
+    // adc_out = 101010101010 = 0xAAA
     $display("TEST 3: cmp_out alternating 0,1,0,1");
     $display("  Expected: adc_out = 101010101010 (0xAAA)");
     $display("  Reason: cmp_out=0->bit=1, cmp_out=1->bit=0, alternating");
