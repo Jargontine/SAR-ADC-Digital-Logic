@@ -3,7 +3,7 @@
 `timescale 1ns/1ps
 
 module sar_dig_logic (
-  	input  wire        CK_SARCLK,
+    input  wire        sar_adc_dig_clk_vdd,
     input  wire        sar_pdnb_vdd,
     input  wire        sar_cmp_out_vdd,
 
@@ -50,7 +50,7 @@ localparam SMPCVM_DUR       = 10;
 reg [4:0] clk_cnt;
 reg       ref_tick;
 
-  always @(posedge CK_SARCLK or negedge sar_pdnb_vdd) begin
+always @(posedge sar_adc_dig_clk_vdd or negedge sar_pdnb_vdd) begin
     if (!sar_pdnb_vdd) begin
         clk_cnt  <= 0;
         ref_tick <= 0;
@@ -79,7 +79,7 @@ reg [3:0]  bit_idx;
 reg [3:0]  tick;
 reg        cmp_sampled;
 
-  always @(posedge CK_SARCLK or negedge sar_pdnb_vdd) begin
+always @(posedge sar_adc_dig_clk_vdd or negedge sar_pdnb_vdd) begin
     if (!sar_pdnb_vdd) begin
         state                    <= ST_IDLE;
         startup_cnt              <= 0;
@@ -205,9 +205,9 @@ reg        cmp_sampled;
                 sar_cmp_clk_vdd          <= 0;
                 sar_cmp_ltch_disable_vdd <= 0;
                 sar_data_samp        <= 0;
-                cmp_sampled          <= sar_cmp_out;
+                cmp_sampled          <= sar_cmp_out_vdd;
 
-                if (sar_cmp_out == 1) begin
+                if (sar_cmp_out_vdd == 1) begin
                     dac_pcode[11-bit_idx] <= 0;
                     dac_ncode[11-bit_idx] <= 1;
                 end else begin
